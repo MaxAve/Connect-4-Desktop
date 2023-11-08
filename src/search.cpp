@@ -48,8 +48,8 @@ search::Eval search::minimax(const bitboards::Board& board, bool maximizing, uin
                     best_eval.move = i;
                 }
 
-                int _alpha = std::max(alpha, best_eval.eval);
-                if(beta <= _alpha)
+                alpha = std::max(alpha, best_eval.eval);
+                if(beta <= alpha)
                 {
                     break;
                 }
@@ -77,8 +77,8 @@ search::Eval search::minimax(const bitboards::Board& board, bool maximizing, uin
                     best_eval.move = i;
                 }
 
-                int _beta = std::min(beta, best_eval.eval);
-                if(_beta <= alpha) {
+                beta = std::min(beta, best_eval.eval);
+                if(beta <= alpha) {
                     break;
                 }
             }
