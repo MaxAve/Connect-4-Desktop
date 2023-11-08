@@ -16,15 +16,14 @@ int search::eval_board(const bitboards::Board &board)
 search::Eval search::minimax(const bitboards::Board& board, bool maximizing, uint8_t depth, int alpha, int beta)
 {
     const int winner = bitboards::get_winner(board);
+    const uint64_t cb = board.bitboards[0] | board.bitboards[1];
 
-    if(depth == 0 || winner != 0) // TODO add check to see if board is full
+    if(depth == 0 || winner != 0 || !(cb ^ FULL)) // TODO add check to see if board is full
     {
         return {(winner * 100) + search::eval_board(board) + (maximizing ? -((int)depth) : (int)depth), 0};
     }
 
     search::Eval best_eval;
-
-    const uint64_t cb = board.bitboards[0] | board.bitboards[1];
 
     if(maximizing)
     {

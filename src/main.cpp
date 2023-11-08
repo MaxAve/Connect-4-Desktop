@@ -122,6 +122,20 @@ int main(int argc, char* argv[]) {
                     computerMove = true;
                 }
             }
+
+            // Key press
+            if(event.type == SDL_KEYDOWN)
+            {
+                // C
+                if(event.key.keysym.sym == SDL_KeyCode::SDLK_c)
+                {
+                    // Clear board and restart game
+                    selectedColumn = 0;
+                    player1Turn = true;
+                    mainBoard = {{0ULL, 0ULL}, 0x1};
+                    winner = 0;
+                }
+            }
         }
 
         // Get mouse position
@@ -169,7 +183,7 @@ int main(int argc, char* argv[]) {
         // CPU move
         if(computerMove)
         {
-            bitboards::place_disc(mainBoard, search::minimax(mainBoard, false, 8, INT32_MIN, INT32_MAX).move);
+            bitboards::place_disc(mainBoard, search::minimax(mainBoard, false, 10, INT32_MIN, INT32_MAX).move);
             winner = bitboards::get_winner(mainBoard);
             if(winner == 1)
                 winnerDisplayRect.w = 64 * winnerDisplayRectScale;
