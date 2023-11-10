@@ -14,6 +14,10 @@ int main(int argc, char* argv[]) {
     bitboards::Board mainBoard = {{0ULL, 0ULL}, 0x1};
     bitboards::load_win_masks();
     int winner = 0;
+    int move = 0;
+    float score[2] = {0, 0};
+
+    std::cout << "[INFO] Loading SDL...\n";
 
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -43,15 +47,22 @@ int main(int argc, char* argv[]) {
 
     const int winnerDisplayRectScale = 4;
 
+    // Rects
     SDL_Rect pointerRect = {0, gridY - 70, 100, 50}; // Pointer rect
     SDL_Rect winnerDisplayRect = {gridX, gridY - (8 * winnerDisplayRectScale) - 30, 0, 8 * winnerDisplayRectScale}; // Winner display rect
+    SDL_Rect thinkingRect = {gridX + gridWidth + 10, gridY, 118, 22}; // "Thinking..." rect
 
     // Mouse coordinates
     int mouseX = 0;
     int mouseY = 0;
 
+    std::cout << "[INFO] Loading textures...\n";
+    std::cout << "[INFO] Score: [" << score[0] << " - " << score[1] << "]\n";
+
     // Load surfaces, textures, and fonts
-    SDL_Surface* imageSurface = IMG_Load("/home/maxave/projects/Connect-4-Desktop/assets/images/slot.png");
+    SDL_Surface* imageSurface = nullptr;
+
+    imageSurface = IMG_Load("/home/maxave/projects/Connect-4-Desktop/assets/images/slot.png");
     SDL_Texture* slotTexture = SDL_CreateTextureFromSurface(renderer, imageSurface);
     SDL_FreeSurface(imageSurface);
 
@@ -83,6 +94,10 @@ int main(int argc, char* argv[]) {
     SDL_Texture* drawTexture = SDL_CreateTextureFromSurface(renderer, imageSurface);
     SDL_FreeSurface(imageSurface);
 
+    imageSurface = IMG_Load("/home/maxave/projects/Connect-4-Desktop/assets/images/thinking.png");
+    SDL_Texture* thinkingTexture = SDL_CreateTextureFromSurface(renderer, imageSurface);
+    SDL_FreeSurface(imageSurface);
+
     SDL_Event event; // SDL event
     bool isRunning = true;
 
@@ -90,6 +105,8 @@ int main(int argc, char* argv[]) {
 
     // Mouse press state
     bool mouseDown = false;
+
+    std::cout << "[INFO] Started new game\n";
 
     // Game loop
     while (isRunning) {
@@ -130,10 +147,26 @@ int main(int argc, char* argv[]) {
                 if(event.key.keysym.sym == SDL_KeyCode::SDLK_c)
                 {
                     // Clear board and restart game
+                    switch(winner)
+                    {
+                        case 1:
+                        score[0]++;
+                        break;
+                        case -1:
+                        score[1]++;
+                        break;
+                        case 0:
+                        score[0] += 0.5f;
+                        score[1] += 0.5f;
+                        break;
+                    }
+                    move = 0;
                     selectedColumn = 0;
                     player1Turn = true;
                     mainBoard = {{0ULL, 0ULL}, 0x1};
                     winner = 0;
+                    std::cout << "[INFO] Started new game\n";
+                    std::cout << "[INFO] Score: [" << score[0] << " - " << score[1] << "]\n";
                 }
             }
         }
@@ -163,6 +196,11 @@ int main(int argc, char* argv[]) {
             SDL_RenderCopy(renderer, (mainBoard.bitboards[0] & (1ULL << (41-i))) ? slotRedTexture : (mainBoard.bitboards[1] & (1ULL << (41-i))) ? slotYellowTexture : slotTexture, nullptr, gridRects[i]);
         }
 
+        // "Thinking..."
+        if(computerMove) {
+            SDL_RenderCopy(renderer, thinkingTexture, nullptr, &thinkingRect);
+        }
+
         // Winner
         switch(winner)
         {
@@ -183,7 +221,15 @@ int main(int argc, char* argv[]) {
         // CPU move
         if(computerMove)
         {
-            bitboards::place_disc(mainBoard, search::minimax(mainBoard, false, 10, INT32_MIN, INT32_MAX).move);
+            move++;
+            const int depth = 10;
+            std::cout << "[INFO] Thinking... (depth=" << depth << ")\n";
+            const search::Eval position_eval = search::minimax(mainBoard, false, depth, INT32_MIN, INT32_MAX);
+            std::cout << "[INFO] Move: " << move << "\n";
+            std::cout << "[INFO] Eval: " << position_eval.eval << "\n";
+            std::cout << "[INFO] Best move: " << (int)position_eval.move << "\n";
+            std::cout << "-------------------\n";
+            bitboards::place_disc(mainBoard, position_eval.move);
             winner = bitboards::get_winner(mainBoard);
             if(winner == 1)
                 winnerDisplayRect.w = 64 * winnerDisplayRectScale;
@@ -200,6 +246,8 @@ int main(int argc, char* argv[]) {
     Final cleanup
     */
 
+    std::cout << "[INFO] Cleaning up...\n";
+
     SDL_DestroyTexture(slotTexture);
     SDL_DestroyTexture(redPointerTexture);
     SDL_DestroyTexture(yellowPointerTexture);
@@ -207,6 +255,9 @@ int main(int argc, char* argv[]) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+
+    std::cout << "[INFO] Score: [" << score[0] << " - " << score[1] << "]\n";
+    std::cout << "Session finished.\n";
 
     return 0;
 }

@@ -1,2 +1,5 @@
-# Ignore executable files
+# Executable file
 Connect4*
+
+# Settings
+.vscode
